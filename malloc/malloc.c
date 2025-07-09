@@ -31,8 +31,8 @@ typedef struct my_metadata_t {
 } my_metadata_t;
 
 typedef struct my_heap_t {
-  my_metadata_t *free_head; //free_headを指定する？
-  my_metadata_t dummy; //変えるっぽい
+  my_metadata_t *free_head; 
+  my_metadata_t dummy;
 } my_heap_t;
 
 //
@@ -44,10 +44,14 @@ my_heap_t bins[4]; //my_heap;
 // Helper functions (feel free to add/remove/edit!)
 //
 int bin_check(size_t size) {
-  if(size < 2000){return 0;}
-  else if((2000 <= size) && (size < 3000)){return 1;}
-  else if((3000 <= size) && (size < 4000)){return 2;}
-  else;{return 3;}
+  if(size < 16){return 0;}
+  else if((16 <= size) && (size < 64)) return 1;
+  else if((64 <= size) && (size < 128)) return 2;
+  else if((128 <= size) && (size < 256)) return 3;
+  else if((256 <= size) && (size < 512)) return 4;
+  else if((512 <= size) && (size < 1024)) return 5;
+  else if((1024 <= size) && (size < 2048)) return 6;
+  else return 7;
 }
 
 void my_add_to_free_list(my_metadata_t *metadata, int x) {
@@ -71,7 +75,7 @@ void my_remove_from_free_list(my_metadata_t *metadata, my_metadata_t *prev, int 
 
 // This is called at the beginning of each challenge.
 void my_initialize() {
-  for (int i = 0; i < 4; i++){
+  for (int i = 0; i < 8; i++){
     bins[i].free_head = &bins[i].dummy;
     bins[i].dummy.size = 0;
     bins[i].dummy.next = NULL;
@@ -83,23 +87,28 @@ void my_initialize() {
 // 4000. You are not allowed to use any library functions other than
 // mmap_from_system() / munmap_to_system().
 void *my_malloc(size_t size) {
-  int x = bin_check(size);
-  my_metadata_t *metadata = bins[x].free_head;
-  my_metadata_t *prev = NULL;
+  //printf("size; %d\n",size);
   my_metadata_t *best = NULL;
   my_metadata_t *best_prev = NULL;
-  // TODO: Update this logic to Best-fit!
-  
-  while (metadata) {
-    if (metadata->size >= size) {
-        if (best == NULL || metadata->size < best->size) {
-            best = metadata;
-            best_prev = prev;
-        }
+  int x = bin_check(size);
+
+  while(x < 8){
+    my_metadata_t *metadata = bins[x].free_head;
+    my_metadata_t *prev = NULL;
+    // TODO: Update this logic to Best-fit!
+    while (metadata) {
+      if (metadata->size >= size) {
+          if (best == NULL || metadata->size < best->size) {
+              best = metadata;
+              best_prev = prev;
+          }
+      }
+      prev = metadata;
+      metadata = metadata->next;
     }
-    prev = metadata;
-    metadata = metadata->next;
-}
+    if(best) break;
+    x++;
+  }
 
   if (!best) {
     // There was no free slot available. We need to request a new memory region
@@ -115,9 +124,11 @@ void *my_malloc(size_t size) {
     metadata->size = buffer_size - sizeof(my_metadata_t);
     metadata->next = NULL;
     // Add the memory region to the free list.
-    my_add_to_free_list(metadata,x);
+    int y = bin_check(metadata->size);
+    my_add_to_free_list(metadata,y);
     // Now, try my_malloc() again. This should succeed.
-    return my_malloc(size);
+    return my_malloc(size); 
+    
   }
 
   // |ptr| is the beginning of the allocated object.
@@ -148,7 +159,8 @@ void *my_malloc(size_t size) {
     new_metadata->size = remaining_size - sizeof(my_metadata_t);
     new_metadata->next = NULL;
     // Add the remaining free slot to the free list.
-    my_add_to_free_list(new_metadata,x);
+    int z = bin_check(new_metadata->size);
+    my_add_to_free_list(new_metadata,z);
   }           
   return ptr;
 }
