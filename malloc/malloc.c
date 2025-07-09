@@ -44,13 +44,13 @@ my_heap_t bins[4]; //my_heap;
 // Helper functions (feel free to add/remove/edit!)
 //
 int bin_check(size_t size) {
-  if(size < 16){return 0;}
-  else if((16 <= size) && (size < 64)) return 1;
-  else if((64 <= size) && (size < 128)) return 2;
-  else if((128 <= size) && (size < 256)) return 3;
-  else if((256 <= size) && (size < 512)) return 4;
-  else if((512 <= size) && (size < 1024)) return 5;
-  else if((1024 <= size) && (size < 2048)) return 6;
+  if (size < 64) return 0;
+  else if (size < 128) return 1;
+  else if (size < 256) return 2;
+  else if (size < 384) return 3;
+  else if (size < 512) return 4;
+  else if (size < 768) return 5;
+  else if (size < 1024) return 6;
   else return 7;
 }
 
