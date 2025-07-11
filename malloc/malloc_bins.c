@@ -60,16 +60,6 @@ void my_add_to_free_list(my_metadata_t *metadata, int x) {
   bins[x].free_head = metadata;
 }
 
-void marge_right(my_metadata_t *metadata, int x) {
-  my_metadata_t *curr = bins[x].free_head->next;
-  my_metadata_t *prev = bins[x].free_head;
-  if(curr->next == metadata){
-    metadata->size += curr->size;
-    metadata->size += sizeof(my_metadata_t);
-    prev->next = metadata;
-  }
-}
-
 void my_remove_from_free_list(my_metadata_t *metadata, my_metadata_t *prev, int x) {
   if (prev) {
     prev->next = metadata->next;
@@ -105,7 +95,6 @@ void *my_malloc(size_t size) {
   while(x < 8){
     my_metadata_t *metadata = bins[x].free_head;
     my_metadata_t *prev = NULL;
-
     // TODO: Update this logic to Best-fit!
     while (metadata) {
       if (metadata->size >= size) {
